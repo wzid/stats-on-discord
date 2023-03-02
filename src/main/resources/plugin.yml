@@ -1,0 +1,5 @@
+name: stats-on-discord
+version: '${version}'
+main: dev.wzid.StatisticsViewer
+api-version: 1.19
+
