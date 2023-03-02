@@ -1,0 +1,68 @@
+plugins {
+    id 'java'
+}
+
+group = 'dev.wzid'
+version = '0.1'
+
+configurations {
+    provided
+    // Make compile extend from our provided configuration so that things added to bundled end up on the compile classpath
+    compile.extendsFrom(provided)
+    implementation.extendsFrom(provided)
+}
+
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'papermc-repo'
+        url = 'https://repo.papermc.io/repository/maven-public/'
+    }
+    maven {
+        name = 'sonatype'
+        url = 'https://oss.sonatype.org/content/groups/public/'
+    }
+
+}
+
+dependencies {
+    compileOnly 'io.papermc.paper:paper-api:1.19.3-R0.1-SNAPSHOT'
+    provided group: 'net.dv8tion', name: 'JDA', version: '5.0.0-beta.2'
+   // implementation group: 'net.dv8tion', name: 'JDA', version: '5.0.0-beta.2'
+}
+
+//MTA3NjIxOTk5NDgwMDY2NDU4Nw.GbrEoM.2UtoTQBAZGa_m6vXyDzFgQUFvrVnT3_0FNeiF8
+def targetJavaVersion = 17
+java {
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+}
+
+jar {
+    //CopySpec.filesMatching(DuplicatesStrategy.INCLUDE)
+    // Include all of the jars from the bundled configuration in our jar
+    from configurations.provided.collect { it.isDirectory() ? it : zipTree(it) }
+
+    setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+
+}
+
+tasks.withType(JavaCompile).configureEach {
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+        options.release = targetJavaVersion
+    }
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('plugin.yml') {
+        expand props
+    }
+}
